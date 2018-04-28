@@ -1,28 +1,27 @@
 package testapp.springbackend.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     private long id;
+
+    private String name;
+
 
     public User(String name) {
         this.name = name;
     }
 
-    public long getId() {
-
-        return id;
-    }
-
     public void setId(long id) {
         this.id = id;
+    }
+
+    public long getId() {
+        return id;
     }
 
     public String getName() {
@@ -32,6 +31,4 @@ public class User {
     public void setName(String name) {
         this.name = name;
     }
-
-    private String name;
 }
