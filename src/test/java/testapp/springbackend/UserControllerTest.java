@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -65,9 +67,9 @@ public class UserControllerTest {
                 });
         when(userRepository.findById(anyLong()))
                 .then(inv -> Optional.ofNullable(db.get(inv.getArgument(0))));
-        userRepository.save(new User("Ivan"));
-        userRepository.save(new User("Josh"));
-        userRepository.save(new User("Bob"));
+        userRepository.save(new User("Ivan", "Petrov", "mail", "555"));
+        userRepository.save(new User("Josh", "Doe", "gmail", "12345"));
+        userRepository.save(new User("Bob", "Lee", "mail", "2345"));
     }
 
 
@@ -88,9 +90,35 @@ public class UserControllerTest {
         mockMvc.perform(get("/user")
                 .param("id", id.toString()))
                 .andDo(print())
+                .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
+                .andExpect(status().reason("No such User"))
+                .andExpect(content().string(""));
+    }
+
+    @Test
+    public void getUserWithNegativeIdTest() throws Exception {
+        Long id = -2L;
+        mockMvc.perform(get("/user")
+                .param("id", id.toString()))
+                .andDo(print())
+                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()))
+                .andExpect(status().reason("Wrong User id"))
+                .andExpect(content().string(""));
+    }
+
+    @Test
+    public void postUserWithFullInfoTest() throws Exception {
+        User user = new User("Roman","Fomin","@gmail.com","+7921");
+        mockMvc.perform(post("/user")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(user)))
+//                .param("firstName", "Roman")
+//                .param("lastName", "Fomin")
+//                .param("email", "@gmail.com")
+//                .param("phoneNumber", "+7921"))
+                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(content().json(objectMapper.writeValueAsString(db.get(id))));
+                .andExpect(content().string(String.valueOf(userId.get())));
     }
 
 

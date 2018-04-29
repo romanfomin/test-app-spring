@@ -3,6 +3,9 @@ package testapp.springbackend.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import testapp.springbackend.entity.User;
+import testapp.springbackend.exception.IllegalUserIdException;
+import testapp.springbackend.exception.IncompleteUserInfoException;
+import testapp.springbackend.exception.UserNotFoundException;
 import testapp.springbackend.repository.UserRepository;
 
 import java.util.Optional;
@@ -24,12 +27,14 @@ public class UserController {
     @ResponseBody
     public User findUserById(@RequestParam("id") Long id) {
         Optional<User> user = userRepository.findById(id);
-        if(user.isPresent()){
+        if (user.isPresent()) {
             return user.get();
-        }else{
-            //error!!!
-            return null;
         }
+        if (id <= 0) {
+            throw new IllegalUserIdException();
+        }
+        throw new UserNotFoundException();
+
     }
 
 
@@ -37,8 +42,15 @@ public class UserController {
             consumes = "application/json",
             produces = "application/json"
     )
-    public void addUser(@RequestBody User user){
-        userRepository.save(user);
+    public Long addUser(@RequestBody User user) {
+        if (user.getFirstName().isEmpty()
+                || user.getLastName().isEmpty()
+                || user.getEmail().isEmpty()
+                || user.getPhoneNumber().isEmpty()) {
+            throw new IncompleteUserInfoException();
+        }
+        return userRepository.save(user).getId();
+
     }
 
 }
