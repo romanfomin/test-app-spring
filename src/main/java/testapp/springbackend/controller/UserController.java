@@ -3,6 +3,7 @@ package testapp.springbackend.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import testapp.springbackend.entity.User;
+import testapp.springbackend.entity.UserStatus;
 import testapp.springbackend.exception.IllegalUserIdException;
 import testapp.springbackend.exception.IncompleteUserInfoException;
 import testapp.springbackend.exception.UserNotFoundException;
@@ -43,14 +44,14 @@ public class UserController {
             produces = "application/json"
     )
     public Long addUser(@RequestBody User user) {
-        if (user.getFirstName().isEmpty()
-                || user.getLastName().isEmpty()
-                || user.getEmail().isEmpty()
-                || user.getPhoneNumber().isEmpty()) {
+        if (user == null
+                || user.getFirstName() == null || user.getFirstName().isEmpty()
+                || user.getLastName() == null || user.getLastName().isEmpty()
+                || user.getEmail() == null || user.getEmail().isEmpty()
+                || user.getPhoneNumber() == null || user.getPhoneNumber().isEmpty()) {
             throw new IncompleteUserInfoException();
         }
         return userRepository.save(user).getId();
 
     }
-
 }
