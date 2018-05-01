@@ -132,127 +132,127 @@ public class ControllerTest {
                 .andExpect(content().json(objectMapper.writeValueAsString(users.get(id))));
     }
 
-//    @Test
-//    public void getNonexistentUserTest() throws Exception {
-//        Long id = 10L;
-//        mockMvc.perform(get("/user")
-//                .param("id", id.toString()))
-//                .andDo(print())
-//                .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
-//                .andExpect(status().reason("No such User"))
-//                .andExpect(content().string(""));
-//    }
-//
-//    @Test
-//    public void getUserWithNegativeIdTest() throws Exception {
-//        Long id = -2L;
-//        mockMvc.perform(get("/user")
-//                .param("id", id.toString()))
-//                .andDo(print())
-//                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()))
-//                .andExpect(status().reason("Wrong User id"))
-//                .andExpect(content().string(""));
-//    }
-//
-//    @Test
-//    public void postUserWithFullInfoTest() throws Exception {
-//        User user = new User("Roman", "Fomin", "@gmail.com", "+7921");
-//        mockMvc.perform(post("/user")
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
-//                .content(objectMapper.writeValueAsString(user)))
-//                .andDo(print())
-//                .andExpect(status().isOk())
-//                .andExpect(content().string(String.valueOf(userId.get())));
-//    }
-//
-//    @Test
-//    public void postUserWithNotFullInfoTest() throws Exception {
-//        User user = new User("Roman", "", "@gmail.com", "");
-//        mockMvc.perform(post("/user")
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
-//                .content(objectMapper.writeValueAsString(user)))
-//                .andDo(print())
-//                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()))
-//                .andExpect(status().reason("Not all fields are filled"))
-//                .andExpect(content().string(""));
-//    }
-//
-//    @Test
-//    public void setStatusToOfflineWithoutPreviousTest() throws Exception {
-//        UserStatus userStatus = new UserStatus(1L, Status.OFFLINE);
-//
-//        mockMvc.perform(patch("/user")
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
-//                .content(objectMapper.writeValueAsString(userStatus)))
-//                .andDo(print())
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-//                .andExpect(content().json(objectMapper.writeValueAsString(
-//                        new UserStatusResp(
-//                                userStatus.getId(),
-//                                userStatus.getStatus(),
-//                                null,
-//                                statuses.get(userStatus.getId()).getDate()
-//                        ))));
-//    }
-//
-//
-//    @Test
-//    public void setStatusToAwayTest() throws Exception {
-//        UserStatus userStatus = new UserStatus(2L, Status.AWAY);
-//
-//        mockMvc.perform(patch("/user")
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
-//                .content(objectMapper.writeValueAsString(userStatus)))
-//                .andDo(print())
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-//                .andExpect(content().json(objectMapper.writeValueAsString(
-//                        new UserStatusResp(
-//                                userStatus.getId(),
-//                                userStatus.getStatus(),
-//                                Status.OFFLINE,
-//                                statuses.get(userStatus.getId()).getDate()
-//                        ))));
-//    }
-//
-//
-//    @Test
-//    public void setStatusToOnlineThenToOfflineTest() throws Exception {
-//        statuses.put(3L, new UserStatus(3L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
-//        UserStatus userStatus = new UserStatus(3L, Status.ONLINE);
-//
-//        mockMvc.perform(patch("/user")
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
-//                .content(objectMapper.writeValueAsString(userStatus)))
-//                .andDo(print())
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-//                .andExpect(content().json(objectMapper.writeValueAsString(
-//                        new UserStatusResp(
-//                                userStatus.getId(),
-//                                userStatus.getStatus(),
-//                                Status.OFFLINE,
-//                                statuses.get(userStatus.getId()).getDate()
-//                        ))));
-//        Thread.sleep(1000);
-//        userStatus.setStatus(Status.OFFLINE);
-//        mockMvc.perform(patch("/user")
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
-//                .content(objectMapper.writeValueAsString(userStatus)))
-//                .andDo(print())
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-//                .andExpect(content().json(objectMapper.writeValueAsString(
-//                        new UserStatusResp(
-//                                userStatus.getId(),
-//                                userStatus.getStatus(),
-//                                Status.ONLINE,
-//                                statuses.get(userStatus.getId()).getDate()
-//                        ))));
-//        Thread.sleep(6000);
-//        assertEquals(Status.OFFLINE, statuses.get(userStatus.getId()).getStatus());
-//    }
+    @Test
+    public void getNonexistentUserTest() throws Exception {
+        Long id = 10L;
+        mockMvc.perform(get("/user")
+                .param("id", id.toString()))
+                .andDo(print())
+                .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
+                .andExpect(status().reason("No such User"))
+                .andExpect(content().string(""));
+    }
+
+    @Test
+    public void getUserWithNegativeIdTest() throws Exception {
+        Long id = -2L;
+        mockMvc.perform(get("/user")
+                .param("id", id.toString()))
+                .andDo(print())
+                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()))
+                .andExpect(status().reason("Wrong User id"))
+                .andExpect(content().string(""));
+    }
+
+    @Test
+    public void postUserWithFullInfoTest() throws Exception {
+        User user = new User("Roman", "Fomin", "@gmail.com", "+7921");
+        mockMvc.perform(post("/user")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(user)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().string(String.valueOf(userId.get())));
+    }
+
+    @Test
+    public void postUserWithNotFullInfoTest() throws Exception {
+        User user = new User("Roman", "", "@gmail.com", "");
+        mockMvc.perform(post("/user")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(user)))
+                .andDo(print())
+                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()))
+                .andExpect(status().reason("Not all fields are filled"))
+                .andExpect(content().string(""));
+    }
+
+    @Test
+    public void setStatusToOfflineWithoutPreviousTest() throws Exception {
+        UserStatus userStatus = new UserStatus(1L, Status.OFFLINE);
+
+        mockMvc.perform(patch("/user")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(userStatus)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().json(objectMapper.writeValueAsString(
+                        new UserStatusResp(
+                                userStatus.getId(),
+                                userStatus.getStatus(),
+                                null,
+                                statuses.get(userStatus.getId()).getDate()
+                        ))));
+    }
+
+
+    @Test
+    public void setStatusToAwayTest() throws Exception {
+        UserStatus userStatus = new UserStatus(2L, Status.AWAY);
+
+        mockMvc.perform(patch("/user")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(userStatus)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().json(objectMapper.writeValueAsString(
+                        new UserStatusResp(
+                                userStatus.getId(),
+                                userStatus.getStatus(),
+                                Status.OFFLINE,
+                                statuses.get(userStatus.getId()).getDate()
+                        ))));
+    }
+
+
+    @Test
+    public void setStatusToOnlineThenToOfflineTest() throws Exception {
+        statuses.put(3L, new UserStatus(3L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
+        UserStatus userStatus = new UserStatus(3L, Status.ONLINE);
+
+        mockMvc.perform(patch("/user")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(userStatus)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().json(objectMapper.writeValueAsString(
+                        new UserStatusResp(
+                                userStatus.getId(),
+                                userStatus.getStatus(),
+                                Status.OFFLINE,
+                                statuses.get(userStatus.getId()).getDate()
+                        ))));
+        Thread.sleep(1000);
+        userStatus.setStatus(Status.OFFLINE);
+        mockMvc.perform(patch("/user")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(userStatus)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().json(objectMapper.writeValueAsString(
+                        new UserStatusResp(
+                                userStatus.getId(),
+                                userStatus.getStatus(),
+                                Status.ONLINE,
+                                statuses.get(userStatus.getId()).getDate()
+                        ))));
+        Thread.sleep(6000);
+        assertEquals(Status.OFFLINE, statuses.get(userStatus.getId()).getStatus());
+    }
 
 
     @Test
@@ -273,8 +273,6 @@ public class ControllerTest {
                                 statuses.get(userStatus.getId()).getDate()
                         ))));
 
-//        userStatus.setDate(new Timestamp(System.currentTimeMillis()));
-//        userStatusRepository.save(userStatus);
 
         assertEquals(Status.ONLINE, statuses.get(userStatus.getId()).getStatus());
         Thread.sleep(4000);
