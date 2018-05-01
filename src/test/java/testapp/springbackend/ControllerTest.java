@@ -26,6 +26,7 @@ import testapp.springbackend.repository.UserStatusRepository;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doAnswer;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -67,9 +69,10 @@ public class ControllerTest {
 
     @Before
     public void setUp() {
+        int delay=1000;
         when(userRepository.save(any(User.class)))
                 .then(inv -> {
-//                    Thread.sleep(5000);
+                    Thread.sleep(delay);
                     User user = inv.getArgument(0);
                     user.setId(userId.incrementAndGet());
                     users.put(user.getId(), user);
@@ -77,23 +80,40 @@ public class ControllerTest {
                 });
         when(userRepository.findById(anyLong()))
                 .then(inv -> {
-//                    Thread.sleep(5000);
+                    Thread.sleep(delay);
                     return Optional.ofNullable(users.get(inv.getArgument(0)));
                 });
         when(userStatusRepository.save(any(UserStatus.class)))
                 .then(inv -> {
+                    Thread.sleep(delay);
                     UserStatus userStatus = inv.getArgument(0);
                     statuses.put(userStatus.getId(), userStatus);
                     return userStatus;
                 });
         when(userStatusRepository.findById(anyLong()))
-                .then(inv -> Optional.ofNullable(statuses.get(inv.getArgument(0))));
-
-        users.put(userId.incrementAndGet(),new User("Ivan", "Petrov", "mail", "555"));
-        users.put(userId.incrementAndGet(),new User("Josh", "Doe", "gmail", "12345"));
-        users.put(userId.incrementAndGet(),new User("Bob", "Lee", "mail", "2345"));
-        statuses.put(2L,new UserStatus(2L,Status.OFFLINE,new Date()));
-        statuses.put(3L,new UserStatus(3L,Status.OFFLINE,new Date()));
+                .then(inv -> {
+                    Thread.sleep(delay);
+                    return Optional.ofNullable(statuses.get(inv.getArgument(0)));
+                });
+        doAnswer(inv -> {
+            for (UserStatus userStatus : statuses.values()) {
+                if (userStatus.getStatus() == Status.ONLINE) {
+                    if ((new Timestamp(System.currentTimeMillis()).getTime()
+                            - userStatus.getDate().getTime()) / (/* 60 * */ 1000) >= 5) {
+                        userStatus.setStatus(Status.AWAY);
+                        statuses.put(userStatus.getId(), userStatus);
+                    }
+                }
+            }
+            return null;
+        }).when(userStatusRepository).setAwayStatus();
+        users.put(userId.incrementAndGet(), new User("Ivan", "Petrov", "mail", "555"));
+        users.put(userId.incrementAndGet(), new User("Josh", "Doe", "gmail", "12345"));
+        users.put(userId.incrementAndGet(), new User("Bob", "Lee", "mail", "2345"));
+        users.put(userId.incrementAndGet(), new User("User", "Last", "email", "+921"));
+        statuses.put(2L, new UserStatus(2L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
+        statuses.put(3L, new UserStatus(3L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
+        statuses.put(4L, new UserStatus(4L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
     }
 
 
@@ -165,11 +185,11 @@ public class ControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(content().json(objectMapper.writeValueAsString(
                         new UserStatusResp(
-                        userStatus.getId(),
-                        userStatus.getStatus(),
-                        null,
-                        statuses.get(userStatus.getId()).getDate()
-                ))));
+                                userStatus.getId(),
+                                userStatus.getStatus(),
+                                null,
+                                statuses.get(userStatus.getId()).getDate()
+                        ))));
     }
 
 
@@ -194,9 +214,9 @@ public class ControllerTest {
 
 
     @Test
-    public void setStatusToOnlineAndWaitTest() throws Exception {
-        statuses.put(3L,new UserStatus(3L,Status.OFFLINE,new Date()));
-        UserStatus userStatus = new UserStatus(3L, Status.ONLINE);
+    public void setStatusToOnlineAndWait5SecondsTest() throws Exception {
+//        statuses.put(4L, new UserStatus(4L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
+        UserStatus userStatus = new UserStatus(4L, Status.ONLINE);
 
         mockMvc.perform(patch("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -211,14 +231,17 @@ public class ControllerTest {
                                 Status.OFFLINE,
                                 statuses.get(userStatus.getId()).getDate()
                         ))));
-        Thread.sleep(6000);
-        assertEquals(Status.AWAY,statuses.get(userStatus.getId()).getStatus());
+        assertEquals(Status.ONLINE, statuses.get(userStatus.getId()).getStatus());
+        Thread.sleep(4000);
+        assertEquals(Status.ONLINE, statuses.get(userStatus.getId()).getStatus());
+        Thread.sleep(4000);
+        assertEquals(Status.AWAY, statuses.get(userStatus.getId()).getStatus());
     }
 
 
     @Test
     public void setStatusToOnlineThenToOfflineTest() throws Exception {
-        statuses.put(3L,new UserStatus(3L,Status.OFFLINE,new Date()));
+        statuses.put(3L, new UserStatus(3L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
         UserStatus userStatus = new UserStatus(3L, Status.ONLINE);
 
         mockMvc.perform(patch("/user")
@@ -250,7 +273,7 @@ public class ControllerTest {
                                 statuses.get(userStatus.getId()).getDate()
                         ))));
         Thread.sleep(6000);
-        assertEquals(Status.AWAY,statuses.get(userStatus.getId()).getStatus());
+        assertEquals(Status.OFFLINE, statuses.get(userStatus.getId()).getStatus());
     }
 
 

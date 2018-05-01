@@ -1,5 +1,6 @@
 package testapp.springbackend.repository;
 
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import testapp.springbackend.entity.UserStatus;
@@ -11,4 +12,7 @@ public interface UserStatusRepository extends CrudRepository<UserStatus,Long> {
 
     Optional<UserStatus> findById(Long id);
     UserStatus save(UserStatus s);
+
+//    @Query("UPDATE statuses as s SET s.status='AWAY' WHERE s.date <= (CURRENT_TIMESTAMP - interval '5 minutes')")
+    void setAwayStatus();
 }

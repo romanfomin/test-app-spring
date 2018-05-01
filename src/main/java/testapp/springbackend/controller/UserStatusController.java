@@ -1,6 +1,7 @@
 package testapp.springbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import testapp.springbackend.entity.Status;
 import testapp.springbackend.entity.User;
@@ -13,6 +14,7 @@ import testapp.springbackend.exception.UserNotFoundException;
 import testapp.springbackend.repository.UserRepository;
 import testapp.springbackend.repository.UserStatusRepository;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -30,6 +32,8 @@ public class UserStatusController {
     public UserStatusController(UserStatusRepository userStatusRepository, UserRepository userRepository) {
         this.userStatusRepository = userStatusRepository;
         this.userRepository = userRepository;
+        scheduler.scheduleAtFixedRate(
+                userStatusRepository::setAwayStatus,0,1,TimeUnit.SECONDS);
     }
 
 
@@ -56,15 +60,8 @@ public class UserStatusController {
         }else{
             statusResp.setPrevStatus(prevStatus.get().getStatus());
         }
-        userStatus.setDate(new Date());
+        userStatus.setDate(new Timestamp(System.currentTimeMillis()));
         userStatusRepository.save(userStatus);
-
-// for each userstatus. if now - date>=5 min => away
-//        if(userStatus.getStatus()==Status.ONLINE){
-//            scheduler.schedule(()->userStatusRepository.save(new UserStatus(userStatus.getId(),Status.AWAY,new Date())),
-//                    5,TimeUnit.SECONDS);
-//            scheduler.shutdown();
-//        }
 
         statusResp.setStatus(userStatus.getStatus());
         statusResp.setId(userStatus.getId());

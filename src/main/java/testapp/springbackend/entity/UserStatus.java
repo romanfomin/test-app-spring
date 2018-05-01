@@ -3,6 +3,7 @@ package testapp.springbackend.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.sql.Timestamp;
 import java.util.Date;
 
 @Entity
@@ -11,12 +12,12 @@ public class UserStatus {
     @Id
     private long id;
     private Status status;
-    private Date date;
+    private Timestamp date;
 
     public UserStatus() {
     }
 
-    public UserStatus(long id, Status status, Date date) {
+    public UserStatus(long id, Status status, Timestamp date) {
         this.id = id;
         this.status = status;
         this.date = date;
@@ -44,11 +45,11 @@ public class UserStatus {
         this.status = status;
     }
 
-    public Date getDate() {
+    public Timestamp getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(Timestamp date) {
         this.date = date;
     }
 }
