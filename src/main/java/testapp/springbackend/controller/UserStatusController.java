@@ -26,12 +26,12 @@ import java.util.concurrent.TimeUnit;
 public class UserStatusController {
     private UserStatusRepository userStatusRepository;
     private UserRepository userRepository;
-    private ScheduledExecutorService scheduler=Executors.newScheduledThreadPool(1);
 
     @Autowired
     public UserStatusController(UserStatusRepository userStatusRepository, UserRepository userRepository) {
         this.userStatusRepository = userStatusRepository;
         this.userRepository = userRepository;
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(
                 userStatusRepository::setAwayStatus,0,1,TimeUnit.SECONDS);
     }
