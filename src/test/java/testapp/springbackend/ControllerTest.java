@@ -2,7 +2,6 @@ package testapp.springbackend;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -16,13 +15,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import testapp.springbackend.controller.UserController;
-import testapp.springbackend.controller.UserStatusController;
 import testapp.springbackend.entity.Status;
 import testapp.springbackend.entity.User;
-import testapp.springbackend.entity.UserStatus;
 import testapp.springbackend.entity.UserStatusResp;
 import testapp.springbackend.repository.UserRepository;
-import testapp.springbackend.repository.UserStatusRepository;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,12 +48,6 @@ public class ControllerTest {
     @InjectMocks
     private static UserController userController;
 
-    @Mock
-    private UserStatusRepository userStatusRepository;
-
-    @InjectMocks
-    private static UserStatusController userStatusController;
-
     @Autowired
     private MockMvc mockMvc;
 
@@ -65,17 +55,18 @@ public class ControllerTest {
     private ObjectMapper objectMapper;
 
     private Map<Long, User> users = new HashMap<>();
-    private Map<Long, UserStatus> statuses = new HashMap<>();
     private AtomicLong userId = new AtomicLong(0);
 
     @Before
     public void setUp() {
-        int delay=1000;
+        int delay = 1000;
         when(userRepository.save(any(User.class)))
                 .then(inv -> {
                     Thread.sleep(delay);
                     User user = inv.getArgument(0);
-                    user.setId(userId.incrementAndGet());
+                    if(users.get(user.getId())==null) {
+                        user.setId(userId.incrementAndGet());
+                    }
                     users.put(user.getId(), user);
                     return user;
                 });
@@ -84,40 +75,24 @@ public class ControllerTest {
                     Thread.sleep(delay);
                     return Optional.ofNullable(users.get(inv.getArgument(0)));
                 });
-        when(userStatusRepository.save(any(UserStatus.class)))
-                .then(inv -> {
-                    Thread.sleep(delay);
-                    UserStatus userStatus = inv.getArgument(0);
-                    statuses.put(userStatus.getId(), userStatus);
-                    return userStatus;
-                });
-        when(userStatusRepository.findById(anyLong()))
-                .then(inv -> {
-                    Thread.sleep(delay);
-                    return Optional.ofNullable(statuses.get(inv.getArgument(0)));
-                });
         doAnswer(inv -> {
-            for (UserStatus userStatus : statuses.values()) {
-                System.out.println(userStatus.getId()+" "+userStatus.getStatus()+" "+userStatus.getDate());
-                if (userStatus.getStatus() == Status.ONLINE) {
+            for (User user : users.values()) {
+                System.out.println(user.getId() + " " + user.getStatus() + " " + user.getDate());
+                if (user.getStatus() == Status.ONLINE) {
                     if ((new Timestamp(System.currentTimeMillis()).getTime()
-                            - userStatus.getDate().getTime()) / (/* 60 * */ 1000) >= 5) {
-                        userStatus.setStatus(Status.AWAY);
-                        statuses.put(userStatus.getId(), userStatus);
+                            - user.getDate().getTime()) / (60*1000) >= 5) {
+                        user.setStatus(Status.AWAY);
+                        users.put(user.getId(), user);
                     }
                 }
             }
 
             return null;
-        }).when(userStatusRepository).setAwayStatus();
-        users.put(userId.incrementAndGet(), new User("Ivan", "Petrov", "mail", "555"));
-        users.put(userId.incrementAndGet(), new User("Josh", "Doe", "gmail", "12345"));
-        users.put(userId.incrementAndGet(), new User("Bob", "Lee", "mail", "2345"));
-        users.put(userId.incrementAndGet(), new User("User", "Last", "email", "+921"));
-
-        statuses.put(2L, new UserStatus(2L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
-        statuses.put(3L, new UserStatus(3L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
-        statuses.put(4L, new UserStatus(4L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
+        }).when(userRepository).setAwayStatus();
+        userRepository.save(new User("Ivan", "Petrov", "mail", "555", Status.ONLINE, new Timestamp(System.currentTimeMillis())));
+        userRepository.save(new User("Josh", "Doe", "gmail", "12345", Status.ONLINE, new Timestamp(System.currentTimeMillis())));
+        userRepository.save(new User("Bob", "Lee", "mail", "2345", Status.ONLINE, new Timestamp(System.currentTimeMillis())));
+        userRepository.save(new User("User", "Last", "email", "+921", Status.ONLINE, new Timestamp(System.currentTimeMillis())));
     }
 
 
@@ -177,29 +152,10 @@ public class ControllerTest {
                 .andExpect(content().string(""));
     }
 
-    @Test
-    public void setStatusToOfflineWithoutPreviousTest() throws Exception {
-        UserStatus userStatus = new UserStatus(1L, Status.OFFLINE);
-
-        mockMvc.perform(patch("/user")
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .content(objectMapper.writeValueAsString(userStatus)))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(content().json(objectMapper.writeValueAsString(
-                        new UserStatusResp(
-                                userStatus.getId(),
-                                userStatus.getStatus(),
-                                null,
-                                statuses.get(userStatus.getId()).getDate()
-                        ))));
-    }
-
 
     @Test
     public void setStatusToAwayTest() throws Exception {
-        UserStatus userStatus = new UserStatus(2L, Status.AWAY);
+        User userStatus = new User(2L, Status.AWAY);
 
         mockMvc.perform(patch("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -211,16 +167,19 @@ public class ControllerTest {
                         new UserStatusResp(
                                 userStatus.getId(),
                                 userStatus.getStatus(),
-                                Status.OFFLINE,
-                                statuses.get(userStatus.getId()).getDate()
+                                Status.ONLINE,
+                                users.get(userStatus.getId()).getDate()
                         ))));
     }
 
 
     @Test
     public void setStatusToOnlineThenToOfflineTest() throws Exception {
-        statuses.put(3L, new UserStatus(3L, Status.OFFLINE, new Timestamp(System.currentTimeMillis())));
-        UserStatus userStatus = new UserStatus(3L, Status.ONLINE);
+        User user = users.get(3L);
+        user.setStatus(Status.OFFLINE);
+        user.setDate(new Timestamp(System.currentTimeMillis()));
+        userRepository.save(user);
+        User userStatus = new User(3L, Status.ONLINE);
 
         mockMvc.perform(patch("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -233,7 +192,7 @@ public class ControllerTest {
                                 userStatus.getId(),
                                 userStatus.getStatus(),
                                 Status.OFFLINE,
-                                statuses.get(userStatus.getId()).getDate()
+                                users.get(userStatus.getId()).getDate()
                         ))));
         Thread.sleep(1000);
         userStatus.setStatus(Status.OFFLINE);
@@ -248,16 +207,20 @@ public class ControllerTest {
                                 userStatus.getId(),
                                 userStatus.getStatus(),
                                 Status.ONLINE,
-                                statuses.get(userStatus.getId()).getDate()
+                                users.get(userStatus.getId()).getDate()
                         ))));
-        Thread.sleep(6000);
-        assertEquals(Status.OFFLINE, statuses.get(userStatus.getId()).getStatus());
+        Thread.sleep(60*1000*6);
+        assertEquals(Status.OFFLINE, users.get(userStatus.getId()).getStatus());
     }
 
 
     @Test
     public void setStatusToOnlineAndWait5SecondsTest() throws Exception {
-        UserStatus userStatus = new UserStatus(4L, Status.ONLINE);
+        User user = users.get(4L);
+        user.setStatus(Status.OFFLINE);
+        user.setDate(new Timestamp(System.currentTimeMillis()));
+        userRepository.save(user);
+        User userStatus = new User(4L, Status.ONLINE);
 
         mockMvc.perform(patch("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -270,15 +233,15 @@ public class ControllerTest {
                                 userStatus.getId(),
                                 userStatus.getStatus(),
                                 Status.OFFLINE,
-                                statuses.get(userStatus.getId()).getDate()
+                                users.get(userStatus.getId()).getDate()
                         ))));
 
 
-        assertEquals(Status.ONLINE, statuses.get(userStatus.getId()).getStatus());
-        Thread.sleep(4000);
-        assertEquals(Status.ONLINE, statuses.get(userStatus.getId()).getStatus());
-        Thread.sleep(2000);
-        assertEquals(Status.AWAY, statuses.get(userStatus.getId()).getStatus());
+        assertEquals(Status.ONLINE, users.get(userStatus.getId()).getStatus());
+        Thread.sleep(60*1000*4);
+        assertEquals(Status.ONLINE, users.get(userStatus.getId()).getStatus());
+        Thread.sleep(60*1000*2);
+        assertEquals(Status.AWAY, users.get(userStatus.getId()).getStatus());
     }
 
 
@@ -288,11 +251,6 @@ public class ControllerTest {
         @Bean
         public UserController userController() {
             return userController;
-        }
-
-        @Bean
-        public UserStatusController userStatusController() {
-            return userStatusController;
         }
 
     }

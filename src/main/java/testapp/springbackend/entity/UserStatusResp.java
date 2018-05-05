@@ -1,14 +1,11 @@
 package testapp.springbackend.entity;
 
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
 import java.util.Date;
 
-@Entity
+
 public class UserStatusResp {
 
-    @Id
     private long id;
     private Status status;
     private Status prevStatus;

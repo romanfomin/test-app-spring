@@ -2,6 +2,7 @@ package testapp.springbackend.entity;
 
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 @Entity
 public class User {
@@ -14,8 +15,15 @@ public class User {
     private String lastName;
     private String email;
     private String phoneNumber;
+    private Status status;
+    private Timestamp date;
 
     public User() {
+    }
+
+    public User(long id, Status status) {
+        this.id = id;
+        this.status = status;
     }
 
     public User(String firstName, String lastName, String email, String phoneNumber) {
@@ -23,6 +31,31 @@ public class User {
         this.lastName = lastName;
         this.email = email;
         this.phoneNumber = phoneNumber;
+    }
+
+    public User(String firstName, String lastName, String email, String phoneNumber, Status status, Timestamp date) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.status = status;
+        this.date = date;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public Timestamp getDate() {
+        return date;
+    }
+
+    public void setDate(Timestamp date) {
+        this.date = date;
     }
 
     public long getId() {
